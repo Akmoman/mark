@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سجل الدرجات الإلكتروني - الدراسات الاجتماعية</title>
+    
+    <!-- ربط ملف الـ Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="icon.png"> <!-- يفضل إضافة أيقونة باسم icon.png -->
+
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -174,7 +180,7 @@
         td.total-cell { font-weight: 800; color: var(--primary); background-color: #fdfdfd; font-size: 1.1rem; }
         td.section-cell { font-size: 0.85rem; color: #7f8c8d; }
 
-        /* صف العنوان المخصص للطباعة */
+        /* صف العنوان المخصص للطباعة (مخفي افتراضياً) */
         .print-title-row { display: none; }
         
         /* عنوان مخصص لصفحات التحليل في الطباعة */
@@ -221,8 +227,7 @@
             .workspace-toolbar, .section-tabs-container, .btn, .action-btn, #landingPage, .modal, .input-row-add { display: none !important; }
             .workspace { display: block !important; }
             
-            /* إخفاء الهيدر العام وإظهار الترويسات المخصصة داخل الأقسام */
-            .print-header { display: none !important; }
+            .print-header { display: block !important; text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; padding-bottom: 5px; }
             
             table { border: 1px solid #000; width: 100%; font-size: 10pt; page-break-after: always; } 
             th, td { border: 1px solid #000; padding: 4px; color: black; text-align: center; height: auto; page-break-inside: avoid; }
@@ -256,6 +261,9 @@
             }
             
             .analysis-section h3 { display: none; } /* إخفاء العنوان الأصلي للقسم لأنه استبدل بالترويسة المخصصة */
+            
+            /* تعديل الشبكة للطباعة لتبقى 5 أعمدة */
+            .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
 
             .print-footer { display: flex !important; justify-content: space-between; margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; page-break-inside: avoid; }
             .designer-credit { display: none !important; }
