@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سجل الدرجات الإلكتروني - الدراسات الاجتماعية</title>
     
-    <!-- ربط ملف الـ Manifest -->
+    <!-- إعدادات تطبيق الويب (PWA) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" href="icon.png"> <!-- يفضل إضافة أيقونة باسم icon.png -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MarkAi">
+    <link rel="apple-touch-icon" href="icon-192.png"> 
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -718,11 +721,13 @@
 
         data.forEach(d => {
             let s = d.keyScore || 0;
+            // منطق المستويات
             if(max === 15) {
                 if(s < 7.5) counts[0]++; else if(s < 9.75) counts[1]++; else if(s < 12) counts[2]++; else if(s < 13.5) counts[3]++; else counts[4]++;
             } else {
                 if(s < 5) counts[0]++; else if(s < 6.5) counts[1]++; else if(s < 8) counts[2]++; else if(s < 9) counts[3]++; else counts[4]++;
             }
+            // منطق النسب
             if(s < 5) low++;
             if((max===15 && s>=12) || (max===10 && s>=8)) high++;
         });
