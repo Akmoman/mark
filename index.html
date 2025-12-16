@@ -195,9 +195,21 @@
         .grade-input:focus { background-color: #e3f2fd; box-shadow: inset 0 0 0 2px var(--info); }
         .grade-input:hover { background-color: #fafafa; }
         
-        td.name-cell { text-align: right; padding-right: 8px; font-weight: 600; font-size: 0.85rem; color: #34495e; min-width: 180px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* حقل الاسم القابل للتعديل */
+        .name-input-table { width: 100%; border: none; background: transparent; font-family: 'Cairo', sans-serif; font-size: 0.85rem; font-weight: 600; color: #34495e; text-align: right; outline: none; }
+        .name-input-table:focus { border-bottom: 1px solid var(--primary); }
+
+        td.name-cell { text-align: right; padding-right: 8px; min-width: 180px; max-width: 220px; }
         td.total-cell { font-weight: 800; color: var(--primary); background-color: #fdfdfd; font-size: 1.1rem; }
+        td.level-cell { font-weight: bold; color: #fff; font-size: 0.9rem; text-shadow: 0 0 2px rgba(0,0,0,0.2); }
         td.section-cell { font-size: 0.85rem; color: #7f8c8d; }
+
+        /* ألوان المستويات */
+        .level-A { background-color: #2ecc71; } /* ممتاز */
+        .level-B { background-color: #1abc9c; } /* جيد جدا */
+        .level-C { background-color: #3498db; } /* جيد */
+        .level-D { background-color: #f39c12; } /* مقبول */
+        .level-E { background-color: #e74c3c; } /* ضعيف */
 
         /* عناصر السلوك */
         .behavior-score { font-weight: bold; font-size: 1.1rem; }
@@ -210,7 +222,7 @@
 
         /* التحليل */
         .analysis-section { padding: 30px; border-top: 1px solid #eee; display: none; background: #fff; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; } /* تعديل لاستيعاب البطاقة السادسة */
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-card { background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #eee; text-align: center; border-bottom-width: 3px; }
         .stat-num { font-size: 1.8rem; font-weight: bold; margin-top: 5px; }
         .rates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
@@ -270,12 +282,12 @@
             tr.section-group-header { display: table-row; }
             tr.section-group-header td { background-color: #ddd !important; color: #000 !important; border: 1px solid #000; font-weight: bold; text-align: center; font-size: 1.2rem; }
             td.name-cell { font-size: 9pt; font-weight: normal; min-width: auto; width: 20%; text-align: right; padding-right: 5px; }
-            .grade-input { text-align: center; padding: 0; font-size: 10pt; }
+            .grade-input, .name-input-table { text-align: center; padding: 0; font-size: 10pt; border: none; }
             #analysisSection { display: none !important; }
             .analysis-print-container { display: block !important; }
             .grade-report-page { page-break-before: always; padding: 20px; border: 1px solid #ccc; margin-bottom: 20px; }
             .analysis-print-title { display: block; margin-bottom: 20px; text-decoration: underline; font-weight:bold; font-size:1.4rem; text-align:center;}
-            .stats-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px; }
+            .stats-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
             .rates-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
             .lists-wrapper { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
             .simple-bar-chart { display: flex; height: 150px; align-items: flex-end; gap: 10px; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
@@ -290,7 +302,7 @@
             .behavior-log-table th { background: #f0f0f0; font-weight: bold; }
             
             .print-footer { display: flex !important; justify-content: space-between; margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; page-break-inside: avoid; }
-            input[type="number"] { border: none; background: none; width: auto; appearance: textfield; }
+            input[type="number"], input[type="text"] { border: none; background: none; width: auto; appearance: textfield; }
         }
         .print-header, .print-footer { display: none; }
     </style>
@@ -543,6 +555,22 @@
         renderTable();
     }
 
+    function calculateLevel(percentage) {
+        if (percentage >= 90) return 'أ';
+        if (percentage >= 80) return 'ب';
+        if (percentage >= 65) return 'ج';
+        if (percentage >= 50) return 'د';
+        return 'هـ';
+    }
+
+    function getLevelColorClass(level) {
+        if (level === 'أ') return 'level-A';
+        if (level === 'ب') return 'level-B';
+        if (level === 'ج') return 'level-C';
+        if (level === 'د') return 'level-D';
+        return 'level-E';
+    }
+
     function renderTable() {
         const table = document.getElementById('gradesTable');
         table.innerHTML = ''; 
@@ -555,7 +583,7 @@
         let hHtml = `<tr class="print-title-row"><th colspan="100%">${printTitle}</th></tr><tr><th style="width:40px">#</th><th style="text-align:right; min-width:200px">الاسم</th><th style="width:70px">الشعبة</th>`;
         if (currentMode === 'grades') {
             schema.fields.forEach(f => hHtml += `<th style="width:70px">${f.label}</th>`);
-            hHtml += `<th>المجموع<br>(${schema.total})</th><th style="width:60px">حذف</th></tr>`;
+            hHtml += `<th>المجموع<br>(${schema.total})</th><th>المستوى</th><th style="width:60px">حذف</th></tr>`;
         } else {
             hHtml += `<th>نقاط السلوك<br>(من 10)</th><th>إجراءات سريعة</th><th>آخر ملاحظة (مع التاريخ)</th></tr>`;
         }
@@ -588,7 +616,7 @@
                 tbody.className = "section-group"; 
                 const groupHeader = document.createElement('tr');
                 groupHeader.className = "section-group-header";
-                const colSpan = currentMode === 'grades' ? (4 + schema.fields.length) : 6;
+                const colSpan = currentMode === 'grades' ? (5 + schema.fields.length) : 6;
                 groupHeader.innerHTML = `<td colspan="${colSpan}">الشعبة: ${currentSectionGroup}</td>`;
                 tbody.appendChild(groupHeader);
                 table.appendChild(tbody);
@@ -596,17 +624,30 @@
 
             const originalIndex = (dbGrades[currentKey] || []).indexOf(item); 
             const tr = document.createElement('tr');
-            let html = `<td>${counter++}</td><td class="name-cell">${item.name}</td><td class="section-cell">${item.section}</td>`;
+            
+            let html = `<td>${counter++}</td>
+                        <td class="name-cell">
+                            <input type="text" class="name-input-table" value="${item.name}" onchange="updateName(${originalIndex}, this.value)">
+                        </td>
+                        <td class="section-cell">${item.section}</td>`;
             
             if (currentMode === 'grades') {
                 schema.fields.forEach(f => {
                     let val = item.scores[f.id] || "";
-                    html += `<td><input type="number" class="grade-input" id="grade-${originalIndex}-${f.id}" value="${val}" min="0" max="${f.max}" step="0.5" onkeydown="handleGradeNavigation(event, ${originalIndex}, '${f.id}')" onchange="updateGrade(${originalIndex}, '${f.id}', this.value)"></td>`;
+                    html += `<td><input type="number" class="grade-input" id="grade-${originalIndex}-${f.id}" value="${val === null ? '' : val}" min="0" max="${f.max}" step="0.5" onkeydown="handleGradeNavigation(event, ${originalIndex}, '${f.id}')" onchange="updateGrade(${originalIndex}, '${f.id}', this.value)"></td>`;
                 });
-                html += `<td class="total-cell" id="total-${originalIndex}">${item.total}</td><td><button class="action-btn del-btn" onclick="deleteItem(${originalIndex})">✕</button></td>`;
+                
+                const stats = getStudentStats(item, schema);
+                let totalDisplay = stats.max > 0 ? stats.obtained : "-";
+                let levelChar = stats.hasGrade ? calculateLevel(stats.percentage) : "-";
+                let levelClass = stats.hasGrade ? getLevelColorClass(levelChar) : "";
+                
+                html += `<td class="total-cell" id="total-${originalIndex}">${totalDisplay}</td>
+                         <td class="level-cell ${levelClass}" id="level-${originalIndex}">${levelChar}</td>
+                         <td><button class="action-btn del-btn" onclick="deleteItem(${originalIndex})">✕</button></td>`;
             } else {
                 let bData = getBehaviorData(item.name, item.section);
-                let score = bData ? bData.score : 0; // البداية من 0
+                let score = bData ? bData.score : 0; 
                 let lastNote = "-";
                 if (bData && bData.logs.length > 0) {
                      const lastLog = bData.logs[bData.logs.length-1];
@@ -614,7 +655,6 @@
                      lastNote = `${dateStr}${lastLog.reason}`;
                 }
                 
-                // إضافة زر التفاصيل/الإدارة في العمود الأخير
                 html += `<td><span class="behavior-score ${score >= 10 ? 'full-mark' : ''}" style="color:${score < 0 ? 'red' : 'green'}">${score}</span></td>
                          <td>
                             <button class="btn-behavior btn-pos" title="إضافة تعزيز" onclick="openBehaviorModal(${originalIndex}, 'pos')">👍</button>
@@ -637,8 +677,31 @@
             buildBehaviorPrintReport(printGroups);
         }
     }
+    
+    function getStudentStats(student, schema) {
+        let obtained = 0;
+        let max = 0;
+        let hasGrade = false;
+        
+        if(!student.scores) return { obtained:0, max:0, percentage:0, hasGrade:false };
 
-    // --- منطق السلوك ---
+        schema.fields.forEach(f => {
+            const val = student.scores[f.id];
+            if (val !== null && val !== "" && val !== undefined) {
+                obtained += parseFloat(val);
+                max += f.max;
+                hasGrade = true;
+            }
+        });
+
+        let percentage = 0;
+        if (max > 0) {
+            percentage = (obtained / max) * 100;
+        }
+
+        return { obtained: parseFloat(obtained.toFixed(1)), max, percentage, hasGrade };
+    }
+
     function getBehaviorData(name, section) {
         if (!dbBehavior[currentKey]) dbBehavior[currentKey] = [];
         return dbBehavior[currentKey].find(b => b.name === name && b.section === section);
@@ -648,10 +711,8 @@
         const student = dbGrades[currentKey][idx];
         document.getElementById('behaviorStudentName').innerText = student.name;
         document.getElementById('behaviorStudentIndex').value = idx;
-        
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('behaviorDate').value = today;
-        
         renderBehaviorLogList(student.name, student.section);
         document.getElementById('behaviorModal').classList.add('active');
     }
@@ -659,7 +720,6 @@
     function renderBehaviorLogList(name, section) {
         const listContainer = document.getElementById('behaviorLogList');
         listContainer.innerHTML = '';
-        
         let bData = getBehaviorData(name, section);
         if (bData && bData.logs.length > 0) {
             bData.logs.forEach((log, i) => {
@@ -668,11 +728,7 @@
                 div.style.cssText = 'display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee; font-size:0.85rem;';
                 const pts = log.points > 0 ? `+${log.points}` : log.points;
                 const color = log.points > 0 ? 'green' : 'red';
-                
-                div.innerHTML = `
-                    <span><span style="color:#888">[${log.date}]</span> ${log.reason} (<span style="color:${color}">${pts}</span>)</span>
-                    <button class="btn-delete-log" onclick="deleteBehaviorItem('${name}', '${section}', ${i})">حذف</button>
-                `;
+                div.innerHTML = `<span><span style="color:#888">[${log.date}]</span> ${log.reason} (<span style="color:${color}">${pts}</span>)</span><button class="btn-delete-log" onclick="deleteBehaviorItem('${name}', '${section}', ${i})">حذف</button>`;
                 listContainer.appendChild(div);
             });
         } else {
@@ -684,41 +740,26 @@
         const idx = document.getElementById('behaviorStudentIndex').value;
         const dateVal = document.getElementById('behaviorDate').value; 
         const student = dbGrades[currentKey][idx];
-        
         if (!dbBehavior[currentKey]) dbBehavior[currentKey] = [];
         let bRecord = dbBehavior[currentKey].find(b => b.name === student.name && b.section === student.section);
-        
         if (!bRecord) { bRecord = { name: student.name, section: student.section, score: 0, logs: [] }; dbBehavior[currentKey].push(bRecord); }
-        
         bRecord.score += points;
-        
-        // التحقق من الوصول إلى 10 نقاط للتكريم
-        if (bRecord.score >= 10 && (bRecord.score - points) < 10) {
-            alert(`🎉 تنبيه: الطالب ${student.name} وصل إلى 10 نقاط سلوك! يرجى تكريمه.`);
-        }
-
+        if (bRecord.score >= 10 && (bRecord.score - points) < 10) { alert(`🎉 تنبيه: الطالب ${student.name} وصل إلى 10 نقاط سلوك! يرجى تكريمه.`); }
         const logDate = dateVal || new Date().toLocaleDateString();
         bRecord.logs.push({ reason: reason, points: points, date: logDate });
         saveData();
-        // إعادة عرض القائمة لتحديث الحذف والإضافة
         renderBehaviorLogList(student.name, student.section);
-        // تحديث الجدول الخلفي أيضًا
         renderTable();
     }
     
     function deleteBehaviorItem(name, section, logIndex) {
         if(!confirm("هل تريد حذف هذا السلوك واسترجاع الدرجة؟")) return;
-        
         let bRecord = dbBehavior[currentKey].find(b => b.name === name && b.section === section);
         if (bRecord) {
-            // عكس التأثير على الدرجة
             bRecord.score -= bRecord.logs[logIndex].points;
-            
-            // حذف العنصر
+            bRecord.score = parseFloat(bRecord.score.toFixed(2));
             bRecord.logs.splice(logIndex, 1);
             saveData();
-            
-            // تحديث الواجهة
             renderBehaviorLogList(name, section);
             renderTable();
         }
@@ -726,13 +767,10 @@
     
     function clearBehaviorLog() {
         if(!confirm("هل أنت متأكد من مسح سجل سلوك هذا الطالب بالكامل؟")) return;
-        
         const idx = document.getElementById('behaviorStudentIndex').value;
         const student = dbGrades[currentKey][idx];
-        
         if (!dbBehavior[currentKey]) dbBehavior[currentKey] = [];
         let bRecord = dbBehavior[currentKey].find(b => b.name === student.name && b.section === student.section);
-        
         if (bRecord) {
             bRecord.score = 0;
             bRecord.logs = [];
@@ -743,7 +781,6 @@
         }
     }
 
-    // --- تقارير الطباعة ---
     function buildPrintReport(groups) {
         const container = document.getElementById('printAnalysisContainer');
         if (!container) return;
@@ -776,8 +813,8 @@
                 <div style="page-break-before: always;"></div>
                 <div class="analysis-print-title">قوائم الطلبة - الصف ${key}</div>
                 <div class="lists-wrapper">
-                    <div class="list-card top-list"><h4>🌟 العشرة الأوائل</h4>${stats.top10.map(s => `<div class="student-item"><span>${s.name} (${s.section})</span><b>${s.total}</b></div>`).join('')}</div>
-                    <div class="list-card bottom-list"><h4>⚠️ بحاجة لمتابعة (أقل 10)</h4>${stats.bottom10.map(s => `<div class="student-item"><span>${s.name} (${s.section})</span><b>${s.total}</b></div>`).join('')}</div>
+                    <div class="list-card top-list"><h4>🌟 العشرة الأوائل</h4>${stats.top10.map(s => `<div class="student-item"><span>${s.name} (${s.section})</span><b>${getStudentStats(s, SCHEMAS[currentKey]).obtained}</b></div>`).join('')}</div>
+                    <div class="list-card bottom-list"><h4>⚠️ بحاجة لمتابعة (أقل 10)</h4>${stats.bottom10.map(s => `<div class="student-item"><span>${s.name} (${s.section})</span><b>${getStudentStats(s, SCHEMAS[currentKey]).obtained}</b></div>`).join('')}</div>
                 </div>
             `;
             container.appendChild(pageDiv);
@@ -817,20 +854,34 @@
     }
 
     function calculateStats(data) {
-        const max = SCHEMAS[currentKey].fields.find(f => f.isKey).max;
         let counts = [0,0,0,0,0]; let low = 0, high = 0;
         data.forEach(d => {
-            let s = d.keyScore || 0;
-            if(max === 15) { if(s < 7.5) counts[0]++; else if(s < 9.75) counts[1]++; else if(s < 12) counts[2]++; else if(s < 13.5) counts[3]++; else counts[4]++; } 
-            else { if(s < 5) counts[0]++; else if(s < 6.5) counts[1]++; else if(s < 8) counts[2]++; else if(s < 9) counts[3]++; else counts[4]++; }
-            if(s < 5) low++; if((max===15 && s>=12) || (max===10 && s>=8)) high++;
+            const stats = getStudentStats(d, SCHEMAS[currentKey]);
+            if (!stats.hasGrade) return; 
+
+            const p = stats.percentage;
+            
+            if (p >= 90) counts[4]++;      // ممتاز
+            else if (p >= 80) counts[3]++; // جيد جدا
+            else if (p >= 65) counts[2]++; // جيد
+            else if (p >= 50) counts[1]++; // مقبول
+            else counts[0]++;              // ضعيف
+
+            if (p < 50) low++;
+            if (p >= 80) high++;
         });
-        const sorted = [...data].sort((a,b) => b.total - a.total);
+
+        const sorted = [...data].sort((a,b) => {
+            const statsA = getStudentStats(a, SCHEMAS[currentKey]);
+            const statsB = getStudentStats(b, SCHEMAS[currentKey]);
+            return statsB.percentage - statsA.percentage; 
+        });
+        
         return { 
-            totalStudents: data.length, // Add total students
+            totalStudents: data.length, 
             counts: counts, 
-            lowPct: Math.round((low/data.length)*100) || 0, 
-            highPct: Math.round((high/data.length)*100) || 0, 
+            lowPct: data.length ? Math.round((low/data.length)*100) : 0, 
+            highPct: data.length ? Math.round((high/data.length)*100) : 0, 
             top10: sorted.slice(0, 10), 
             bottom10: [...sorted].reverse().slice(0, 10), 
             top5: sorted.slice(0, 5), 
@@ -838,18 +889,47 @@
         };
     }
 
-    function updateGrade(idx, fid, val) {
-        let n = parseFloat(val); if(isNaN(n)) n=0;
-        const s = dbGrades[currentKey][idx];
-        const f = SCHEMAS[currentKey].fields.find(x=>x.id===fid);
-        if(n > f.max) { alert("خطأ"); n=f.max; document.getElementById(`grade-${idx}-${fid}`).value=n; }
-        s.scores[fid] = n;
-        if(f.isKey) s.keyScore = n;
-        s.total = SCHEMAS[currentKey].fields.reduce((a,b)=>a+(parseFloat(s.scores[b.id])||0), 0);
-        document.getElementById(`total-${idx}`).innerText = s.total;
+    function updateGrade(index, fieldId, value) {
+        const student = dbGrades[currentKey][index];
+        const schema = SCHEMAS[currentKey];
+        let numVal = value === "" ? null : parseFloat(value);
+        if (numVal !== null && isNaN(numVal)) numVal = null; 
+
+        const field = schema.fields.find(f => f.id === fieldId);
+        if (numVal !== null && numVal > field.max) {
+            alert(`خطأ: الدرجة القصوى هي ${field.max}`); numVal = field.max; document.getElementById(`grade-${index}-${fieldId}`).value = numVal;
+        } else if (numVal !== null && numVal < 0) {
+            numVal = 0; document.getElementById(`grade-${index}-${fieldId}`).value = numVal;
+        }
+
+        student.scores[fieldId] = numVal;
+        if(field.isKey) student.keyScore = numVal || 0; 
+
+        const stats = getStudentStats(student, schema);
+        let totalDisplay = stats.max > 0 ? stats.obtained : "-";
+        
+        const totalCell = document.getElementById(`total-${index}`);
+        if(totalCell) totalCell.innerText = totalDisplay;
+        
+        // تحديث المستوى
+        const levelChar = stats.hasGrade ? calculateLevel(stats.percentage) : "-";
+        const levelClass = stats.hasGrade ? getLevelColorClass(levelChar) : "";
+        const levelCell = document.getElementById(`level-${index}`);
+        if(levelCell) {
+            levelCell.innerText = levelChar;
+            levelCell.className = `level-cell ${levelClass}`;
+        }
+        
         saveData();
-        const v = dbGrades[currentKey].filter(i => selectedSections.length===0 || selectedSections.includes(i.section));
-        updateAnalysis(v);
+        const visibleData = dbGrades[currentKey].filter(item => selectedSections.length === 0 || selectedSections.includes(item.section));
+        updateAnalysis(visibleData);
+    }
+    
+    function updateName(index, newName) {
+        if(!newName.trim()) return;
+        dbGrades[currentKey][index].name = newName.trim();
+        saveData();
+        if(isAlphaSort) renderTable();
     }
     
     function handleGradeNavigation(e, r, c) {
@@ -860,9 +940,9 @@
     function toggleVerticalMode() { isVerticalMode = !isVerticalMode; const b=document.getElementById('verticalModeBtn'); b.innerText=isVerticalMode?"⬇️ إدخال عمودي: مفعل":"⬇️ إدخال عمودي: معطل"; b.classList.toggle('active'); }
     function toggleSortAlpha() { isAlphaSort = !isAlphaSort; const b=document.getElementById('sortAlphaBtn'); b.innerText=isAlphaSort?"🔠 ترتيب أبجدي: مفعل":"🔠 ترتيب أبجدي: معطل"; b.classList.toggle('active'); renderTable(); }
     
-    function quickAddStudent() { const n=document.getElementById('quickAddName').value.trim(); if(!n) return; const sc={}; SCHEMAS[currentKey].fields.forEach(f=>sc[f.id]=0); const sec=selectedSections.length>0?selectedSections[0]:"عام"; if(!dbGrades[currentKey])dbGrades[currentKey]=[]; dbGrades[currentKey].push({name:n, section:sec, scores:sc, total:0, keyScore:0}); saveData(); renderTable(); document.getElementById('quickAddName').value=""; }
+    function quickAddStudent() { const n=document.getElementById('quickAddName').value.trim(); if(!n) return; const sc={}; SCHEMAS[currentKey].fields.forEach(f=>sc[f.id]=null); const sec=selectedSections.length>0?selectedSections[0]:"عام"; if(!dbGrades[currentKey])dbGrades[currentKey]=[]; dbGrades[currentKey].push({name:n, section:sec, scores:sc, total:0, keyScore:0}); saveData(); renderTable(); document.getElementById('quickAddName').value=""; }
     
-    function importSectionStudents(sec) { if(!sec || !dbSections[currentKey][sec]) return; const lst=dbSections[currentKey][sec].split('\n').map(s=>s.trim()).filter(s=>s); const sc={}; SCHEMAS[currentKey].fields.forEach(f=>sc[f.id]=0); if(!dbGrades[currentKey])dbGrades[currentKey]=[]; let c=0; lst.forEach(n=>{ if(!dbGrades[currentKey].some(s=>s.name===n)){ dbGrades[currentKey].push({name:n, section:sec, scores:{...sc}, total:0, keyScore:0}); c++; } }); if(c>0){ if(!selectedSections.includes(sec))selectedSections.push(sec); saveData(); renderSectionTabs(); renderTable(); alert(`تم ${c}`); } document.getElementById('bulkImportSelect').value=""; }
+    function importSectionStudents(sec) { if(!sec || !dbSections[currentKey][sec]) return; const lst=dbSections[currentKey][sec].split('\n').map(s=>s.trim()).filter(s=>s); const sc={}; SCHEMAS[currentKey].fields.forEach(f=>sc[f.id]=null); if(!dbGrades[currentKey])dbGrades[currentKey]=[]; let c=0; lst.forEach(n=>{ if(!dbGrades[currentKey].some(s=>s.name===n)){ dbGrades[currentKey].push({name:n, section:sec, scores:{...sc}, total:0, keyScore:0}); c++; } }); if(c>0){ if(!selectedSections.includes(sec))selectedSections.push(sec); saveData(); renderSectionTabs(); renderTable(); alert(`تم ${c}`); } document.getElementById('bulkImportSelect').value=""; }
     
     function renderSectionTabs() {
         const c=document.getElementById('sectionTabs'); c.innerHTML='';
@@ -877,15 +957,12 @@
         if(!chartInstance) return;
         const st = calculateStats(data);
         const el = id => document.getElementById(id);
-        
-        // Update Total
         if(el('statTotal')) el('statTotal').innerText = st.totalStudents;
-
         ['Weak','Acc','Good','VGood','Exc'].forEach((k,i)=>el('stat'+k).innerText=st.counts[i]);
         el('rateLow').innerText=st.lowPct+"%"; el('rateHigh').innerText=st.highPct+"%";
         chartInstance.data.datasets[0].data=st.counts; chartInstance.update();
-        el('topList').innerHTML=st.top10.map(s=>`<div class="student-item"><span>${s.name} (${s.section})</span><b>${s.total}</b></div>`).join('');
-        el('bottomList').innerHTML=st.bottom10.map(s=>`<div class="student-item"><span>${s.name} (${s.section})</span><b>${s.total}</b></div>`).join('');
+        el('topList').innerHTML=st.top10.map(s=>`<div class="student-item"><span>${s.name} (${s.section})</span><b>${getStudentStats(s, SCHEMAS[currentKey]).obtained}</b></div>`).join('');
+        el('bottomList').innerHTML=st.bottom10.map(s=>`<div class="student-item"><span>${s.name} (${s.section})</span><b>${getStudentStats(s, SCHEMAS[currentKey]).obtained}</b></div>`).join('');
     }
     
     function openNamesModal() { document.getElementById('namesModal').classList.add('active'); document.getElementById('modalStageSelect').value=currentKey||"5-9"; loadSectionsForModal(); }
