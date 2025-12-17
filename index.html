@@ -8,10 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            /* لوحة الألوان الفاتحة */
-            --primary: #2c3e50;       /* أزرق غامق */
-            --primary-light: #ecf0f1; /* رمادي فاتح جداً */
-            --accent: #27ae60;        /* أخضر هادئ */
+            /* لوحة الألوان */
+            --primary: #2c3e50;       
+            --primary-light: #ecf0f1; 
+            --accent: #27ae60;        
             --bg-color: #f4f7f6;      
             --white: #ffffff;
             --text-dark: #2c3e50;     
@@ -290,51 +290,15 @@
             .analysis-print-container { display: block !important; }
             .grade-report-page { page-break-before: always; padding: 20px; border: 1px solid #ccc; margin-bottom: 20px; }
             .analysis-print-title { display: block; margin-bottom: 20px; text-decoration: underline; font-weight:bold; font-size:1.4rem; text-align:center;}
-            
-            /* تعديل الطباعة للسطر الواحد */
-            .stats-grid { 
-                grid-template-columns: repeat(6, 1fr) !important; 
-                gap: 8px; 
-                margin-bottom: 15px;
-            }
-            .stat-card {
-                padding: 5px;
-                border: 1px solid #999;
-            }
+            .stats-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 8px; margin-bottom: 15px; }
+            .stat-card { padding: 5px; border: 1px solid #999; }
             .stat-card h5 { font-size: 0.8rem; margin-bottom: 2px; }
             .stat-num { font-size: 1.2rem; }
-            
             .rates-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
             .lists-wrapper { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-            
-            /* تحسين الرسم البياني للطباعة */
-            .simple-bar-chart { 
-                display: flex !important; 
-                height: 200px !important; 
-                align-items: flex-end !important; 
-                gap: 15px !important; 
-                margin-top: 20px !important; 
-                border-bottom: 2px solid #000 !important; 
-                padding-bottom: 5px !important; 
-                width: 100% !important;
-            }
-            .bar-col { 
-                flex: 1 !important; 
-                display: flex !important; 
-                flex-direction: column !important; 
-                align-items: center !important; 
-                justify-content: flex-end !important; 
-                height: 100% !important;
-            }
-            /* إضافة حدود وإجبار الألوان */
-            .bar { 
-                width: 80% !important; 
-                border: 2px solid #000 !important; 
-                border-bottom: none !important;
-                min-height: 2px !important; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            }
+            .simple-bar-chart { display: flex; height: 200px; align-items: flex-end; gap: 15px; margin-top: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; width: 100%; }
+            .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+            .bar { width: 80%; border: 2px solid #000; border-bottom: none; min-height: 2px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bar-label { font-size: 0.85rem; margin-top: 5px; text-align: center; font-weight:bold;}
             .bar-val { font-size: 0.95rem; font-weight: bold; margin-bottom: 2px; }
             
@@ -566,8 +530,20 @@
 
     function parseGrade(sectionName) {
         if(!sectionName) return 999;
-        const match = sectionName.match(/\d+/);
-        if(match) return parseInt(match[0]);
+        // استخراج الرقم من اسم الشعبة مع دعم العربية والإنجليزية
+        const match = sectionName.match(/(\d+)|(خامس|سادس|سابع|ثامن|تاسع|عاشر|حادي|ثاني)/);
+        if(match) {
+            const val = match[0];
+            if(!isNaN(val)) return parseInt(val);
+            if(val.includes('خامس')) return 5;
+            if(val.includes('سادس')) return 6;
+            if(val.includes('سابع')) return 7;
+            if(val.includes('ثامن')) return 8;
+            if(val.includes('تاسع')) return 9;
+            if(val.includes('عاشر')) return 10;
+            if(val.includes('حادي')) return 11;
+            if(val.includes('ثاني')) return 12;
+        }
         return 999;
     }
 
@@ -687,9 +663,8 @@
                 });
                 
                 const stats = getStudentStats(item, schema);
-                // التعديل هنا: إظهار الرقم فقط إذا كان هناك درجة، وإلا "-"
+                // التعديل: إظهار الرقم فقط
                 let totalDisplay = stats.hasGrade ? stats.obtained : "-";
-                
                 let levelChar = stats.hasGrade ? calculateLevel(stats.percentage) : "-";
                 let levelClass = stats.hasGrade ? getLevelColorClass(levelChar) : "";
                 
@@ -750,7 +725,6 @@
             percentage = (obtained / max) * 100;
         }
 
-        // parseFloat لازالة الاصفار العشرية الزائدة (مثل 15.0 تصبح 15)
         return { obtained: parseFloat(obtained.toFixed(1)), max, percentage, hasGrade };
     }
 
@@ -965,9 +939,7 @@
         if(field.isKey) student.keyScore = numVal || 0; 
 
         const stats = getStudentStats(student, schema);
-        
-        // التعديل هنا: إظهار الرقم فقط
-        let totalDisplay = stats.hasGrade ? stats.obtained : "-";
+        let totalDisplay = stats.max > 0 ? stats.obtained : "-";
         
         const totalCell = document.getElementById(`total-${index}`);
         if(totalCell) totalCell.innerText = totalDisplay;
