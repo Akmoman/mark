@@ -8,10 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            /* لوحة الألوان */
-            --primary: #2c3e50;       
-            --primary-light: #ecf0f1; 
-            --accent: #27ae60;        
+            /* لوحة الألوان الفاتحة */
+            --primary: #2c3e50;       /* أزرق غامق */
+            --primary-light: #ecf0f1; /* رمادي فاتح جداً */
+            --accent: #27ae60;        /* أخضر هادئ */
             --bg-color: #f4f7f6;      
             --white: #ffffff;
             --text-dark: #2c3e50;     
@@ -186,7 +186,7 @@
         .table-wrapper { overflow-x: auto; padding-bottom: 50px; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         thead { background-color: #ecf0f1; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        th { padding: 12px 8px; color: #2c3e50; font-weight: 700; border-bottom: 2px solid #bdc3c7; white-space: nowrap; font-size: 0.9rem; text-align: center; }
+        th { padding: 8px; color: #2c3e50; font-weight: 700; border-bottom: 2px solid #bdc3c7; white-space: nowrap; font-size: 0.9rem; text-align: center; vertical-align: middle; }
         td { padding: 0; border-bottom: 1px solid #eee; text-align: center; height: 40px; }
         tr:hover { background-color: #f9f9f9; }
         tr.section-group-header td { background-color: #f8f9fa; color: var(--primary); font-weight: bold; text-align: right; padding: 8px 15px; border-top: 2px solid #dfe6e9; }
@@ -203,6 +203,12 @@
         td.total-cell { font-weight: 800; color: var(--primary); background-color: #fdfdfd; font-size: 1.1rem; }
         td.level-cell { font-weight: bold; color: #fff; font-size: 0.9rem; text-shadow: 0 0 2px rgba(0,0,0,0.2); }
         td.section-cell { font-size: 0.85rem; color: #7f8c8d; }
+
+        /* زر الدرجة الكاملة */
+        .btn-mini-action {
+            background: none; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.75rem; padding: 1px 5px; margin-top: 2px; color: #27ae60;
+        }
+        .btn-mini-action:hover { background-color: #eaffea; border-color: #27ae60; }
 
         /* ألوان المستويات */
         .level-A { background-color: #2ecc71; } /* ممتاز */
@@ -273,7 +279,7 @@
             @page { size: landscape; margin: 1cm; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; zoom: 90%; }
             .container { box-shadow: none; border: none; margin: 0; width: 100%; max-width: 100%; }
-            .workspace-toolbar, .section-tabs-container, .btn, .action-btn, #landingPage, .modal, .input-row-add, .mode-switcher { display: none !important; }
+            .workspace-toolbar, .section-tabs-container, .btn, .action-btn, #landingPage, .modal, .input-row-add, .mode-switcher, .btn-mini-action { display: none !important; }
             .workspace { display: block !important; }
             .print-header { display: block !important; text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; padding-bottom: 5px; }
             table { border: 1px solid #000; width: 100%; font-size: 10pt; page-break-after: always; } 
@@ -391,8 +397,6 @@
 
     <div id="analysisSection" class="analysis-section">
         <h3 style="color:var(--primary); margin-bottom:20px;">📊 تحليل النتائج (المعروض حالياً)</h3>
-        
-        <!-- التعديل هنا: السطر الأول يشمل الإجمالي + 5 مستويات -->
         <div class="stats-grid">
             <div class="stat-card" style="border-bottom-color:#2c3e50"><h5>إجمالي الطلاب</h5><div id="statTotal" class="stat-num" style="color:#2c3e50">0</div></div>
             <div class="stat-card" style="border-bottom-color:#e74c3c"><h5>ضعيف</h5><div id="statWeak" class="stat-num" style="color:#e74c3c">0</div></div>
@@ -401,16 +405,11 @@
             <div class="stat-card" style="border-bottom-color:#1abc9c"><h5>جيد جداً</h5><div id="statVGood" class="stat-num" style="color:#1abc9c">0</div></div>
             <div class="stat-card" style="border-bottom-color:#2ecc71"><h5>ممتاز</h5><div id="statExc" class="stat-num" style="color:#2ecc71">0</div></div>
         </div>
-
-        <!-- السطر الثاني: الرسم البياني -->
-        <div class="chart-wrapper" style="margin-top:20px;"><canvas id="analysisChart"></canvas></div>
-
-        <!-- السطر الثالث: نسب التدني والتفوق -->
         <div class="rates-grid">
             <div class="rate-card red"><h5>⚠️ نسبة التدني (< 5)</h5><div class="stat-num" id="rateLow">0%</div></div>
             <div class="rate-card green"><h5>🌟 نسبة التفوق (أ، ب)</h5><div class="stat-num" id="rateHigh">0%</div></div>
         </div>
-        
+        <div class="chart-wrapper"><canvas id="analysisChart"></canvas></div>
         <div class="lists-wrapper">
             <div class="list-card top-list"><h4 style="color:#27ae60; border-color:#2ecc71">🌟 العشرة الأوائل</h4><div id="topList"></div></div>
             <div class="list-card bottom-list"><h4 style="color:#c0392b; border-color:#e74c3c">⚠️ بحاجة لمتابعة (أقل 10)</h4><div id="bottomList"></div></div>
@@ -530,20 +529,8 @@
 
     function parseGrade(sectionName) {
         if(!sectionName) return 999;
-        // استخراج الرقم من اسم الشعبة مع دعم العربية والإنجليزية
-        const match = sectionName.match(/(\d+)|(خامس|سادس|سابع|ثامن|تاسع|عاشر|حادي|ثاني)/);
-        if(match) {
-            const val = match[0];
-            if(!isNaN(val)) return parseInt(val);
-            if(val.includes('خامس')) return 5;
-            if(val.includes('سادس')) return 6;
-            if(val.includes('سابع')) return 7;
-            if(val.includes('ثامن')) return 8;
-            if(val.includes('تاسع')) return 9;
-            if(val.includes('عاشر')) return 10;
-            if(val.includes('حادي')) return 11;
-            if(val.includes('ثاني')) return 12;
-        }
+        const match = sectionName.match(/\d+/);
+        if(match) return parseInt(match[0]);
         return 999;
     }
 
@@ -596,6 +583,29 @@
         return 'level-E';
     }
 
+    // إضافة دالة لإعطاء الدرجة الكاملة
+    function giveFullMarkToAll(fieldId) {
+        if(!confirm("هل أنت متأكد من منح الدرجة الكاملة لجميع الطلاب الظاهرين في هذا العمود؟")) return;
+        
+        const schema = SCHEMAS[currentKey];
+        const field = schema.fields.find(f => f.id === fieldId);
+        const maxScore = field.max;
+        
+        let data = dbGrades[currentKey];
+        
+        data.forEach(student => {
+            // التحقق من الفلتر
+            if(selectedSections.length > 0 && !selectedSections.includes(student.section)) return;
+            
+            student.scores[fieldId] = maxScore;
+            if(field.isKey) student.keyScore = maxScore;
+        });
+        
+        saveData();
+        renderTable();
+        // showNotif("تم رصد الدرجة الكاملة للجميع", "success"); // دالة showNotif موجودة بالأسفل
+    }
+
     function renderTable() {
         const table = document.getElementById('gradesTable');
         table.innerHTML = ''; 
@@ -607,7 +617,13 @@
 
         let hHtml = `<tr class="print-title-row"><th colspan="100%">${printTitle}</th></tr><tr><th style="width:40px">#</th><th style="text-align:right; min-width:200px">الاسم</th><th style="width:70px">الشعبة</th>`;
         if (currentMode === 'grades') {
-            schema.fields.forEach(f => hHtml += `<th style="width:70px">${f.label}</th>`);
+            schema.fields.forEach(f => {
+                hHtml += `<th style="width:70px">
+                    ${f.label}
+                    <br>
+                    <button class="btn-mini-action" onclick="giveFullMarkToAll('${f.id}')" title="إعطاء الدرجة الكاملة للجميع">✅</button>
+                </th>`;
+            });
             hHtml += `<th>المجموع<br>(${schema.total})</th><th>المستوى</th><th style="width:60px">حذف</th></tr>`;
         } else {
             hHtml += `<th>نقاط السلوك<br>(من 10)</th><th>إجراءات سريعة</th><th>آخر ملاحظة (مع التاريخ)</th></tr>`;
@@ -704,6 +720,7 @@
         }
     }
     
+    // دالة مساعدة لحساب مجموع الطالب الحالي
     function getStudentStats(student, schema) {
         let obtained = 0;
         let max = 0;
@@ -944,6 +961,7 @@
         const totalCell = document.getElementById(`total-${index}`);
         if(totalCell) totalCell.innerText = totalDisplay;
         
+        // تحديث المستوى
         const levelChar = stats.hasGrade ? calculateLevel(stats.percentage) : "-";
         const levelClass = stats.hasGrade ? getLevelColorClass(levelChar) : "";
         const levelCell = document.getElementById(`level-${index}`);
